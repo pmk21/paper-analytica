@@ -33,7 +33,7 @@ def preprocess_text(text):
     # Removing stop words
     stop_words = set(stopwords.words("english"))
     word_tokens = word_tokenize(text)
-    filt_sum = [w for w in word_tokens if not w in stop_words]
+    filt_sum = [w for w in word_tokens if w not in stop_words]
 
     filt_sum = " ".join(filt_sum)
 
