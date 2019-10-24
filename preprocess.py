@@ -1,16 +1,20 @@
 # Libraries required to be imported
 import json
-import numpy as np
+import os
 import re
+import string
+import sys
+
+import fire
+import numpy as np
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-import string
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 def str_to_list(x):
     """
-        Converting string enclosed lists to a python list
+        Converting string enclosed lists to a python list.
     """
     for i in range(len(x)):
         x[i]["author"] = eval(x[i]["author"])
@@ -20,7 +24,7 @@ def str_to_list(x):
 
 def preprocess_text(text):
     """
-        Preprocess text data for performing analysis
+        Preprocess text data for performing analysis.
     """
     # Converting all the letters to lowercase
     text = text.lower()
@@ -40,22 +44,43 @@ def preprocess_text(text):
     return filt_sum
 
 
-# Directory where data is stored
-DATA_DIR = "data/"
+def compute(data_dir="./data/", num_features=100):
+    """
+        Computes the TF-IDF vector and saves it.
 
-with open(DATA_DIR + "arxivData.json", "r") as fp:
-    data = json.load(fp)
+        Parameters:
+            data_dir (string): Path to the directory containing the data.
+            num_features (int): Maximum number of words to consider for computing the TF-IDF vector.
+    """
 
-str_to_list(data)
+    if data_dir == "./data/" and not os.path.isdir(data_dir):
+        os.mkdir("./data")
 
-# Get each paper's abstract/summary
-paperSummaries = np.array(list(map(lambda x: x["summary"], data)))
+    try:
+        with open(data_dir + "arxivData.json", "r") as fp:
+            data = json.load(fp)
+    except FileNotFoundError:
+        print('Data does not exist in "{0}" ! Please download it and try again.'.format(
+            data_dir))
+        sys.exit(1)
 
-cleanSummaries = np.array(list(map(preprocess_text, paperSummaries)))
-# TODO: Stem the words later if needed
+    str_to_list(data)
 
-# Converting each abstract into a TF-IDF vector
-vectorizer = TfidfVectorizer(tokenizer=word_tokenize)
-vectSum = vectorizer.fit_transform(cleanSummaries)
+    # Get each paper's abstract/summary
+    paperSummaries = np.array(list(map(lambda x: x["summary"], data)))
 
-np.save(DATA_DIR + "tfidf-vectors.npy", vectSum)
+    cleanSummaries = np.array(list(map(preprocess_text, paperSummaries)))
+    # TODO: Stem the words later if needed
+
+    # Converting each abstract into a TF-IDF vector
+    vectorizer = TfidfVectorizer(
+        tokenizer=word_tokenize, max_features=num_features)
+    vectSum = vectorizer.fit_transform(cleanSummaries)
+
+    np.save(data_dir + "tfidf-vectors-" + str(num_features) + ".npy", vectSum)
+
+    print("Computed vector and saved!")
+
+
+if __name__ == "__main__":
+    fire.Fire(compute)
