@@ -48,9 +48,12 @@ def compute(data_dir="./data/", num_features=100):
     """
         Computes the TF-IDF vector and saves it.
 
-        Parameters:
-            data_dir (string): Path to the directory containing the data.
-            num_features (int): Maximum number of words to consider for computing the TF-IDF vector.
+        Parameters
+        ----------
+        data_dir : string
+            Path to the directory containing the data.
+        num_features : int
+            Max words to consider in computing TF-IDF values.
     """
 
     if data_dir == "./data/" and not os.path.isdir(data_dir):
@@ -60,8 +63,7 @@ def compute(data_dir="./data/", num_features=100):
         with open(data_dir + "arxivData.json", "r") as fp:
             data = json.load(fp)
     except FileNotFoundError:
-        print('Data does not exist in "{0}" ! Please download it and try again.'.format(
-            data_dir))
+        print('Data does not exist in "{0}" !'.format(data_dir))
         sys.exit(1)
 
     str_to_list(data)
