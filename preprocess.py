@@ -1,6 +1,7 @@
 # Libraries required to be imported
 import json
 import os
+import pickle
 import re
 import string
 import sys
@@ -47,6 +48,7 @@ def preprocess_text(text):
 def compute(data_dir="./data/", num_features=100):
     """
         Computes the TF-IDF vector and saves it.
+        The TF-IDF model is also saved.
 
         Parameters
         ----------
@@ -82,6 +84,11 @@ def compute(data_dir="./data/", num_features=100):
     np.save(data_dir + "tfidf-vectors-" + str(num_features) + ".npy", vectSum)
 
     print("Computed vector and saved!")
+
+    with open(data_dir + 'vectorizer.pk', 'wb') as fin:
+        pickle.dump(vectorizer, fin)
+
+    print("Saved TF-IDF vectorizer!")
 
 
 if __name__ == "__main__":
