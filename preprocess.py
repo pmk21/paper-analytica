@@ -81,7 +81,8 @@ def compute(data_dir="./data/", num_features=100):
         tokenizer=word_tokenize, max_features=num_features)
     vectSum = vectorizer.fit_transform(cleanSummaries)
 
-    np.save(data_dir + "tfidf-vectors-" + str(num_features) + ".npy", vectSum)
+    with open(data_dir + "tfidf-vectors-" + str(num_features) + ".pk", 'wb') as fp:
+        pickle.dump(vectSum, fp)
 
     print("Computed vector and saved!")
 
