@@ -41,7 +41,7 @@ def recommendation(query, tfidf_model, tfidf_matrix, paperTitles):
 
     cosine_similarities = linear_kernel(tfidf_matrix, tfidfQuery)
     related_docs_indices = np.argsort(
-        cosine_similarities, axis=0)[-10:].reshape((-1, ))
+        cosine_similarities, axis=0)[-10:].reshape((-1, ))[::-1]
 
     result = []
     for id in related_docs_indices:
