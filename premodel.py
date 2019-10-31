@@ -40,6 +40,7 @@ def recommendation(query, tfidf_model, tfidf_matrix, paperTitles):
 
     return result
 
+
 if __name__ == "__main__":
     data_dir = "./data/"
 
@@ -54,8 +55,9 @@ if __name__ == "__main__":
     with open(data_dir + "tfidf-vectors-200.pk", "rb") as fp:
         vectSum = pickle.load(fp)
 
-    query = np.array(["Manifold analysis and dimensionality reduction"], dtype=object)
-    
+    query = np.array(
+        ["Manifold analysis and dimensionality reduction"], dtype=object)
+
     recommendedList = recommendation(query, vectorizer, vectSum, paperTitles)
 
     pprint.pprint(recommendedList)

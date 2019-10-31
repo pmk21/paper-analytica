@@ -7,7 +7,9 @@ from preprocess import preprocess_text
 def display_topics(model, feature_names, no_top_words):
     for topic_idx, topic in enumerate(model.components_):
         print("Topic %d:" % (topic_idx))
-        print(" ".join([feature_names[i] for i in topic.argsort()[:-no_top_words - 1:-1]]))
+        print(" ".join([feature_names[i]
+                        for i in topic.argsort()[:-no_top_words - 1:-1]]))
+
 
 def possibleTopics(tfidf_model, vectSum):
     """ 
@@ -15,7 +17,7 @@ def possibleTopics(tfidf_model, vectSum):
         and finds the possible topics of the papers
         using Topic Modeling and Non-negative Matrix Factorization,
          as of now, prints the topics
-        
+
         Parameters
         -----------------
         tfidf_model : sklearn.feature_extraction.text.TfidfVectorizer
@@ -26,16 +28,17 @@ def possibleTopics(tfidf_model, vectSum):
     """
     no_top_words = 10
     no_components = 10
-    tf_feature_names =  tfidf_model.get_feature_names()
+    tf_feature_names = tfidf_model.get_feature_names()
     processedfeatures = np.array(list(map(preprocess_text, tf_feature_names)))
-    
+
     # print(type(vectSum))
-    nmf = NMF(n_components=no_components, random_state=1, alpha=.1, l1_ratio=.5, init='nndsvd').fit(vectSum)
+    nmf = NMF(n_components=no_components, random_state=1,
+              alpha=.1, l1_ratio=.5, init='nndsvd').fit(vectSum)
     display_topics(nmf, processedfeatures, no_top_words)
+
 
 if __name__ == "__main__":
     data_dir = "./data/"
-
 
     with open(data_dir + 'vectorizer.pk', 'rb') as pickle_in:
         vectorizer = pickle.load(pickle_in)
@@ -43,6 +46,4 @@ if __name__ == "__main__":
     with open(data_dir + "tfidf-vectors-200.pk", "rb") as fp:
         vectSum = pickle.load(fp)
 
-    
     possibleTopics(vectorizer, vectSum)
-    
