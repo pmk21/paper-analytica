@@ -3,13 +3,12 @@ import pickle
 import pprint
 from collections import Counter
 
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics.pairwise import linear_kernel
 
 from preprocess import preprocess_text
 from topicModel import get_topics
-
-import matplotlib.pyplot as plt
 
 
 def recommendation(query, tfidf_model, tfidf_matrix, paperTitles):
@@ -58,6 +57,23 @@ def get_related_topic(query, nmf_model, tfidf_model, topic_dict, num_top_words=1
     return query_topic, topic_dict[query_topic]
 
 
+def plot_count_dict(cdict, title, sort='key'):
+    if sort == 'key':
+        items = cdict.items()
+        items = sorted(items, key=lambda x: x[0])
+    elif sort == 'value':
+        items = cdict.items()
+        items = sorted(items, key=lambda x: x[1])
+    else:
+        raise ValueError("sort takes either 'key' or 'value'")
+
+    labels = [i[0] for i in items]
+    counts = [i[1] for i in items]
+    plt.barh(labels, counts)
+    plt.title(title)
+    plt.show()
+
+
 def get_papers_per_year(data_dir, data, topic_no):
     with open(data_dir + "topic_labels.pk", "rb") as fp:
         topic_labels = pickle.load(fp)
@@ -67,6 +83,22 @@ def get_papers_per_year(data_dir, data, topic_no):
     years = [data[i]["year"] for i in idxs]
 
     return Counter(years)
+
+
+def top_authors(data_dir, data, topic_no):
+    with open(data_dir + "topic_labels.pk", "rb") as fp:
+        topic_labels = pickle.load(fp)
+
+    idxs = np.where(topic_labels == topic_no)[0]
+
+    authors = []
+
+    for i in idxs:
+        temp_auth = eval(data[i]["author"])
+        for j in range(len(temp_auth)):
+            authors.append(temp_auth[j]["name"])
+
+    return Counter(authors)
 
 
 if __name__ == "__main__":
@@ -90,21 +122,19 @@ if __name__ == "__main__":
         topic_dict = pickle.load(fp)
 
     query = np.array(
-        ["Image processing"], dtype=object)
+        ["Natural Language Processing"], dtype=object)
 
     recommendedList = recommendation(query, vectorizer, vectSum, paperTitles)
     topic_no, topic_name = get_related_topic(
         query, nmf_model, vectorizer, topic_dict)
 
-    per_year_count = get_papers_per_year(data_dir, data, topic_no)
-
     pprint.pprint(recommendedList)
 
-    years = list(per_year_count.keys())
-    years = sorted(years)
-    counts = [per_year_count[i] for i in years]
-    years = list(map(str, years))
+    per_year_count = get_papers_per_year(data_dir, data, topic_no)
+    plot_count_dict(
+        per_year_count, "Papers published related to the topic per year")
 
-    plt.barh(years, counts)
-    plt.title("Papers published related to the topic per year")
-    plt.show()
+    auth_count = top_authors(data_dir, data, topic_no)
+    plot_count_dict(dict(auth_count.most_common(10)),
+                    "Top authors and number of papers",
+                    "value")
