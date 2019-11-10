@@ -9,6 +9,7 @@ import sys
 import fire
 import numpy as np
 from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -22,8 +23,10 @@ def str_to_list(x):
         # x[i]["link"] = eval(x[i]["link"])
         x[i]["tag"] = eval(x[i]["tag"])
 
+escapes = ''.join([chr(char) for char in range(1, 32)])
+esc_dict = {ord(c): " " for c in escapes}
 
-def preprocess_text(text):
+def preprocess_text(text, stemmer=PorterStemmer(), esc_dict=esc_dict):
     """
         Preprocess text data for performing analysis.
     """
@@ -33,12 +36,17 @@ def preprocess_text(text):
     text = re.sub(r"\d+", "", text)
     # Removing punctuation
     text = text.translate(str.maketrans("", "", string.punctuation))
+    # Remove escape characters
+    text = text.translate(esc_dict)
     # Removing trailing and leading whitespaces
     text = text.strip(" ")
     # Removing stop words
     stop_words = set(stopwords.words("english"))
     word_tokens = word_tokenize(text)
     filt_sum = [w for w in word_tokens if w not in stop_words]
+
+    # Stemming the words
+    filt_sum = [stemmer.stem(w) for w in filt_sum]
 
     filt_sum = " ".join(filt_sum)
 
@@ -74,7 +82,6 @@ def compute(data_dir="./data/", num_features=100):
     paperSummaries = np.array(list(map(lambda x: x["summary"], data)))
 
     cleanSummaries = np.array(list(map(preprocess_text, paperSummaries)))
-    # TODO: Stem the words later if needed
 
     # Converting each abstract into a TF-IDF vector
     vectorizer = TfidfVectorizer(
