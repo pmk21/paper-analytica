@@ -1,11 +1,15 @@
 import json
 import pickle
 import pprint
+from collections import Counter
 
 import numpy as np
 from sklearn.metrics.pairwise import linear_kernel
 
 from preprocess import preprocess_text
+from topicModel import get_topics
+
+import matplotlib.pyplot as plt
 
 
 def recommendation(query, tfidf_model, tfidf_matrix, paperTitles):
@@ -41,6 +45,30 @@ def recommendation(query, tfidf_model, tfidf_matrix, paperTitles):
     return result
 
 
+def get_related_topic(query, nmf_model, tfidf_model, topic_dict, num_top_words=10):
+
+    processedQuery = np.array(list(map(preprocess_text, query)))
+    vectQuery = tfidf_model.transform(processedQuery)
+
+    # Gives the probability of each topic for the query
+    # in a matrix of (top_words * no_of_topics) form
+    # i.e. which topic does each word belong to.
+    topic_probability_scores = nmf_model.transform(vectQuery)
+    query_topic = np.argmax(np.sum(topic_probability_scores, axis=0))
+    return query_topic, topic_dict[query_topic]
+
+
+def get_papers_per_year(data_dir, data, topic_no):
+    with open(data_dir + "topic_labels.pk", "rb") as fp:
+        topic_labels = pickle.load(fp)
+
+    idxs = np.where(topic_labels == topic_no)[0]
+
+    years = [data[i]["year"] for i in idxs]
+
+    return Counter(years)
+
+
 if __name__ == "__main__":
     data_dir = "./data/"
 
@@ -55,9 +83,28 @@ if __name__ == "__main__":
     with open(data_dir + "tfidf-vectors-200.pk", "rb") as fp:
         vectSum = pickle.load(fp)
 
+    with open(data_dir + "nmf_model.pk", 'rb') as fp:
+        nmf_model = pickle.load(fp)
+
+    with open(data_dir + "topic_dict.pk", 'rb') as fp:
+        topic_dict = pickle.load(fp)
+
     query = np.array(
-        ["Manifold analysis and dimensionality reduction"], dtype=object)
+        ["Image processing"], dtype=object)
 
     recommendedList = recommendation(query, vectorizer, vectSum, paperTitles)
+    topic_no, topic_name = get_related_topic(
+        query, nmf_model, vectorizer, topic_dict)
+
+    per_year_count = get_papers_per_year(data_dir, data, topic_no)
 
     pprint.pprint(recommendedList)
+
+    years = list(per_year_count.keys())
+    years = sorted(years)
+    counts = [per_year_count[i] for i in years]
+    years = list(map(str, years))
+
+    plt.barh(years, counts)
+    plt.title("Papers published related to the topic per year")
+    plt.show()
