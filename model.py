@@ -3,6 +3,7 @@ import pickle
 import pprint
 from collections import Counter
 
+import fire
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics.pairwise import linear_kernel
@@ -27,6 +28,11 @@ def recommendation(query, tfidf_model, tfidf_matrix, paperTitles):
             Precomputed TF-IDF vectors of paper summaries.
         paperTitles : list of string
             List of titles of papers
+
+        Returns
+        -------
+        result : list
+            Top 10 titles of research papers
      """
     # Preprocess the query
     processedQuery = np.array(list(map(preprocess_text, query)))
@@ -101,9 +107,19 @@ def top_authors(data_dir, data, topic_no):
     return Counter(authors)
 
 
-if __name__ == "__main__":
-    data_dir = "./data/"
+def model(search_query, data_dir="./data/"):
+    """
+        Takes in a query and path to the data and returns the list of
+        top 10 papers related to the query as well as 2 horizontal bar
+        plots
 
+        Parameters
+        ----------
+        search_query : string
+            Query to be searched for in the dataset.
+        data_dir : string
+            Path to the directory storing the data required.
+    """
     with open(data_dir + "arxivData.json", "r") as fp:
         data = json.load(fp)
 
@@ -122,10 +138,10 @@ if __name__ == "__main__":
         topic_dict = pickle.load(fp)
 
     query = np.array(
-        ["Natural Language Processing"], dtype=object)
+        [search_query], dtype=object)
 
     recommendedList = recommendation(query, vectorizer, vectSum, paperTitles)
-    topic_no, topic_name = get_related_topic(
+    topic_no, _ = get_related_topic(
         query, nmf_model, vectorizer, topic_dict)
 
     pprint.pprint(recommendedList)
@@ -138,3 +154,7 @@ if __name__ == "__main__":
     plot_count_dict(dict(auth_count.most_common(10)),
                     "Top authors and number of papers",
                     "value")
+
+
+if __name__ == "__main__":
+    fire.Fire(model)
